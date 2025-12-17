@@ -10,7 +10,14 @@
     "build": "tsc",
     "start": "node dist/cli.js",
     "test": "ts-node test.ts",
-    "seed": "ts-node seed.ts"
+    "seed": "ts-node seed.ts",
+    "package": "npm run build && pkg . --out-path=build --targets=node18-macos-x64,node18-macos-arm64"
+  },
+  "pkg": {
+    "assets": [
+      "LICENSE",
+      "README.md"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -21,8 +28,10 @@
     "commander": "^14.0.2",
     "fs-extra": "^11.3.2",
     "open-cli": "^8.0.0",
-    "run-applescript": "^7.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
   }
 }
