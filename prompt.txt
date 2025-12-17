@@ -1,0 +1,21 @@
+You are AntiGravity, a code-generation assistant. Build a full project titled "YG".
+            PURPOSE:
+            The peogram is a session hoarder ehich saves session of enture desktop which including open projects in every app and extended features on the browser as it opens exactly those tabs that are opened at that scroll position as it is
+
+            REQUIREMENTS:
+            - Provide a clear folder structure
+            - Provide runnable code, README with setup instructions (macOS/Linux/Windows variations if needed)
+            - Provide tests where applicable
+            - Provide sample seed data or scripts to run locally
+            - Use sensible defaults for tech stack (if unspecified, suggest one)
+            - Mention any third-party APIs or API keys that the developer must configure
+
+            USER'S ADDITIONAL DIRECTIONS:
+            Please implement these features exactly as requested by the user. If the user did not specify a tech-stack, propose a modern stack and explain why.
+
+            OUTPUT:
+            1) A root-level README.md with setup steps and features.
+            2) Complete code in the created folder ready to run locally.
+            3) A file named `prompt.txt` which contains this prompt (for traceability).
+
+            Be concise, production-ready, and include comments in code files.
