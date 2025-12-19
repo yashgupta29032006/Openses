@@ -1,12 +1,13 @@
 # YG (Session Hoarder)
 
-YG is a macOS CLI tool that saves and restores your entire desktop session. It captures open apps, window positions, browser tabs (with scroll position!), and active projects (VS Code).
+YG is a **Universal Desktop Session Manager** for macOS.
+It allows you to save and restore your entire working context (Window positions, Browser Tabs, Open Apps).
 
 ## Features
-- **Browser State**: Saves open tabs and their exact scroll position for Chrome, Brave, and Safari.
-- **Developer Focus**: Remembers your open VS Code, Cursor, or Zed projects.
-- **Window Management**: Restores window positions and sizes.
-- **Multiple Sessions**: Switch between "Work", "Side Project", or "Chill" modes easily.
+-   **Universal Tracking**: Automatically detects and tracks generic window positions for any scriptable macOS app.
+-   **Browser Depth**: Specific adapters for **Chrome**, **Brave**, **Safari**, and **Edge** to save tabs and scroll positions.
+-   **Plugin Architecture**: Easily extensible via the `AppTracker` interface.
+-   **JSON Storage**: Sessions are saved as readable, normalized JSON files in `~/.yg/sessions`.
 
 ## Installation
 
@@ -35,6 +36,17 @@ yg restore work-morning
 yg list
 ```
 
-## Permissions
-YG requires **Accessibility** and **Automation** permissions to control your apps.
-When you run it for the first time, macOS will prompt you to allow Terminal/Node to control Chrome/Finder/etc.
+## Extending (Plugins)
+
+The project is built on a plugin system.
+
+### Adding a new App Tracker
+Implement the `AppTracker` interface:
+```typescript
+class MyAppTracker implements AppTracker {
+    matches(process: AppProcess) { return process.name === 'MyApp'; }
+    async capture(process) { ... }
+    async restore(item) { ... }
+}
+```
+Register it in `src/cli.ts`.

@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "version": 2,
+    "created": 1766178637194,
+    "os": "macos",
+    "hostname": "Yashs-MacBook-Pro-7.local"
+  },
+  "items": [
+    {
+      "type": "browser",
+      "id": "com.brave.Browser",
+      "name": "Brave Browser",
+      "payload": {
+        "windows": [
+          {
+            "tabs": [
+              {
+                "url": "https://chatgpt.com/g/g-p-6943ca8277c88191ba555319214d6967-openses/c/6943cb18-523c-8321-875d-19187077c386",
+                "scrollRatio": 0,
+                "isActive": true
+              }
+            ],
+            "activeTabIndex": 0,
+            "bounds": {
+              "x": 331512982,
+              "w": null,
+              "h": null
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
