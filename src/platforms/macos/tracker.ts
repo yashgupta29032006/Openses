@@ -17,6 +17,7 @@ export class AppleScriptAppTracker implements AppTracker {
 
     async capture(process: AppProcess): Promise<any> {
         const appName = process.name;
+        // Basic window capture
         const script = `
         tell application "${appName}"
             set output to ""
@@ -33,63 +34,77 @@ export class AppleScriptAppTracker implements AppTracker {
         end tell
         `;
 
+        let windows: { title: string; bounds: { x: number; y: number; w: number; h: number; }; }[] = [];
         try {
             const raw = await runAppleScript(script);
-            if (!raw) return { windows: [] };
+            if (raw) {
+                windows = raw.split(';;').filter(Boolean).map(line => {
+                    const parts = line.split('|');
+                    const title = parts[0];
+                    const boundsStr = parts[1] || "";
 
-            const windows = raw.split(';;').filter(Boolean).map(line => {
-                const parts = line.split('|');
-                const title = parts[0];
-                const boundsStr = parts[1] || "";
+                    const coords = boundsStr.replace(/\s/g, '').split(',').map(Number);
+                    let bounds = { x: 0, y: 0, w: 0, h: 0 };
 
-                // bounds: x, y, x2, y2 (or similar)
-                const coords = boundsStr.replace(/\s/g, '').split(',').map(Number);
-                if (coords.length < 4) return null;
-
-                // Standardize to x,y,w,h
-                // AppleScript often returns L,T,R,B
-                return {
-                    title,
-                    bounds: {
-                        x: coords[0],
-                        y: coords[1],
-                        w: coords[2] - coords[0],
-                        h: coords[3] - coords[1]
+                    if (coords.length >= 4) {
+                        // AppleScript bounds are L, T, R, B
+                        bounds = {
+                            x: coords[0],
+                            y: coords[1],
+                            w: coords[2] - coords[0],
+                            h: coords[3] - coords[1]
+                        };
                     }
-                };
-            }).filter(Boolean);
-
-            return { windows };
+                    return { title, bounds };
+                }).filter(Boolean);
+            }
         } catch (e) {
-            // console.warn(`Failed to capture generic app state for ${appName}:`, e);
-            return { windows: [] };
+            // Ignore failure here, try document capture below
         }
+
+        // Try to capture open document/file path
+        let openFile = undefined;
+        try {
+            // Some apps expose 'document 1' -> 'file' -> 'posix path'
+            // Or 'file of document 1'
+            const docScript = `tell application "${appName}" to get POSIX path of (file of document 1)`;
+            const docPath = await runAppleScript(docScript);
+            if (docPath && !docPath.includes('error') && docPath.trim() !== '') {
+                openFile = docPath.trim();
+            }
+        } catch { }
+
+        // If we found nothing, but process is running, return empty object so it IS tracked
+        // This ensures "Notion" is at least opened next time even if we can't get windows
+        return { windows, openFile };
     }
 
     async restore(item: SessionItem): Promise<void> {
         const appName = item.name;
         const windows = item.payload.windows || [];
+        const openFile = item.payload.openFile;
 
         // Activate
         await runAppleScript(`tell application "${appName}" to activate`);
 
-        // We can't generically "create" windows for most apps (like Calculator, Notes, etc) 
-        // without knowing specific commands (make new document etc). 
-        // But we can try to resize existing ones if they match title?
-        // Or just move the frontmost ones.
+        // If we saved an open file, try to open it
+        if (openFile) {
+            try {
+                await runAppleScript(`tell application "${appName}" to open (POSIX file "${openFile}")`);
+            } catch (e) {
+                console.warn(`Failed to open file ${openFile} in ${appName}`);
+            }
+        }
 
-        // Simple Generic Strategy: 
-        // Just try to set bounds of existing windows to match saved ones
-        // This is "best effort".
-
+        // Restore Windows Bounds
         let i = 1;
         for (const win of windows) {
             const { x, y, w, h } = win.bounds;
+            if (w === 0 && h === 0) continue;
+
             const R = x + w;
             const B = y + h;
             try {
-                // Try to find window by title? Hard generically. 
-                // We will just set bounds of window i
                 await runAppleScript(`tell application "${appName}" to set bounds of window ${i} to {${x}, ${y}, ${R}, ${B}}`);
                 i++;
             } catch (e) {
