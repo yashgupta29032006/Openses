@@ -9,38 +9,18 @@ It allows you to save and restore your entire working context (Window positions,
 -   **Plugin Architecture**: Easily extensible via the `AppTracker` interface.
 -   **JSON Storage**: Sessions are saved as readable, normalized JSON files in `~/.yg/sessions`.
 
-## Prerequisites
-
-Before installing, ensure you have **Node.js** installed (which includes `npm`).
--   [Download Node.js](https://nodejs.org/) (LTS version recommended)
-
 ## Installation
 
-1.  **Clone the repository**:
-    ```bash
-    git clone <repo_url>
-    cd Openses
-    ```
+You can download the standalone executable `yg-arm64` (located in the `build` folder).
 
-2.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
+After downloading it, run:
+```bash
+sudo mv ~/Downloads/yg-arm64 /usr/local/bin/yg
+```
 
-3.  **Build the project**:
-    ```bash
-    npm run build
-    ```
-
-4.  **Link the CLI globally** (optional, for easy access):
-    ```bash
-    npm link
-    ```
-    *This allows you to run `yg` from any terminal window.*
+Then you can simply use `yg` from anywhere!
 
 ## Usage
-
-If you linked the package globally:
 
 ### Save a Session
 Save your current open apps and windows:
@@ -72,27 +52,6 @@ yg delete <session-name>
 View all available commands:
 ```bash
 yg --help
-```
-
-### Running without linking
-If you didn't run `npm link`, you can use the CLI directly via node:
-```bash
-node dist/cli.js <command>
-# Example: node dist/cli.js save my-session
-```
-
-## Standalone Usage
-
-You can download the standalone executable `yg-arm64` (located in the `build` folder).
-
-After downloading it, run:
-```bash
-sudo mv ~/Downloads/yg-arm64 /usr/local/bin/yg
-```
-
-Then you can simply run:
-```bash
-yg
 ```
 
 ## Extending (Plugins)
