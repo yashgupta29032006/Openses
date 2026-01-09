@@ -8,10 +8,10 @@ import { ChromeAdapter } from './adapters/browsers/chrome';
 import { SafariAdapter } from './adapters/browsers/safari';
 import os from 'os';
 
-// Initialize System
+
 const registry = PluginRegistry.getInstance();
 
-// Platform Detection
+
 if (process.platform === 'darwin') {
     registry.setPlatform(new MacOSPlatform());
 } else {
@@ -19,15 +19,10 @@ if (process.platform === 'darwin') {
     process.exit(1);
 }
 
-// Register Adapters
+
 registry.registerTracker(new ChromeAdapter());
 registry.registerTracker(new SafariAdapter());
-// MacOSPlatform provides the generic tracker as fallback via getAppTracker() 
-// but we should probably force register it if we want it to be finding generic apps?
-// No, the logic in 'save' below will ask platform or registry.
-// Ideally, we register the Generic one last? 
-// The MacOSPlatform implementation wraps the generic tracker. 
-// Let's rely on the strategy defined below.
+
 
 const storage = new StorageManager();
 const program = new Command();
@@ -57,7 +52,7 @@ program.command('save')
                 }
 
                 if (tracker) {
-                    // console.log(`Capturing ${app.name}...`);
+
                     try {
                         const payload = await tracker.capture(app);
                         // Only add if we captured something meaningful (e.g. windows exist)
@@ -113,12 +108,8 @@ program.command('restore')
 
                 // 2. Fallback to platform generic
                 if (!tracker) {
-                    // Create a dummy process object just to get the generic tracker?
-                    // Or cast platform generic tracker.
-                    // MacOSPlatform returns GenericAppleScriptTracker which returns true for canRestore.
-                    // Ideally we should expose the generic tracker cleaner.
-                    // Let's assume generic tracker is always available via platform logic.
-                    tracker = platform.getAppTracker({ pid: 0, name: item.name }); // Dummy process
+
+                    tracker = platform.getAppTracker({ pid: 0, name: item.name });
                 }
 
                 if (tracker) {

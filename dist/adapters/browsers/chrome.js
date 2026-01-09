@@ -12,7 +12,6 @@ class ChromeAdapter extends abstract_1.AbstractBrowserAdapter {
     }
     async captureRaw(process) {
         const appName = process.name;
-        // AppleScript for Chromium to get windows, tabs, urls, and attempt scroll
         const script = `
         set output to ""
         tell application "${appName}"
@@ -55,7 +54,6 @@ class ChromeAdapter extends abstract_1.AbstractBrowserAdapter {
             if (!body)
                 continue;
             const headerParts = header.split('|');
-            // Bound parsing
             const boundsStr = headerParts[2];
             const coords = boundsStr.replace(/\s/g, '').split(',').map(Number);
             const bounds = { x: coords[0], y: coords[1], w: coords[2] - coords[0], h: coords[3] - coords[1] };
@@ -82,33 +80,14 @@ class ChromeAdapter extends abstract_1.AbstractBrowserAdapter {
         return { windows };
     }
     async restoreRaw(state) {
-        // Since we don't know the exact app name from the state (it's generic),
-        // we might have to rely on what initialized us?
-        // Actually interface `restore` passes `SessionItem` which has the name.
-        // But here we are in restoreRaw which takes `BrowserSessionState`.
-        // We should probably pass the app name in or rely on a default.
-        // HACK: for now we default to Google Chrome if not context provided, 
-        // OR wrapper passes it.
-        // Ideally `restore` in abstract adapter should pass the name.
-        // Let's assume we use the first supported one or the one that matches 'Chrome'.
-        // Better: The `AppTracker.restore` receives `SessionItem`. 
-        // We can override `restore` instead of using `restoreRaw` fully to get the name.
-        // BUT, let's just create a helper here that defaults to Google Chrome if we can't guess.
-        /*
-           Wait, `ChromeAdapter` is instantiated once. It might be handling multiple apps (Chrome, Brave).
-           When `restore` is called, `item.name` tells us which app it was saved as.
-           Let's override `restore` in this class to use `item.name`.
-        */
         throw new Error("Method not implemented via restoreRaw. see restore()");
     }
-    // Override restore to access item.name
     async restore(item) {
-        const appName = item.name; // "Google Chrome" or "Brave Browser"
+        const appName = item.name;
         const state = item.payload;
         await (0, applescript_1.runAppleScript)(`tell application "${appName}" to activate`);
         for (const win of state.windows) {
             let isFirst = true;
-            // Create window
             await (0, applescript_1.runAppleScript)(`tell application "${appName}" to make new window`);
             for (const tab of win.tabs) {
                 if (isFirst) {
@@ -118,7 +97,6 @@ class ChromeAdapter extends abstract_1.AbstractBrowserAdapter {
                 else {
                     await (0, applescript_1.runAppleScript)(`tell application "${appName}" to make new tab at end of tabs of window 1 with properties {URL:"${tab.url}"}`);
                 }
-                // Scroll resoration is hard via AS alone without extension
             }
             const { x, y, w, h } = win.bounds || { x: 0, y: 0, w: 800, h: 600 };
             const R = x + w;

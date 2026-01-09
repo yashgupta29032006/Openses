@@ -1,8 +1,8 @@
-// Defines the schema for messages between the backend and browser extensions
+
 export interface BrowserTab {
     url: string;
     title?: string;
-    scrollRatio: number; // 0 to 1
+    scrollRatio: number;
     isActive: boolean;
     favIconUrl?: string;
 }
@@ -18,7 +18,7 @@ export interface BrowserSessionState {
     windows: BrowserWindow[];
 }
 
-// Message types
+
 export type BrowserAction = 'capture' | 'restore';
 
 export interface ExtensionRequest {

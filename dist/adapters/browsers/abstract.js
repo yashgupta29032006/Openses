@@ -9,13 +9,9 @@ class AbstractBrowserAdapter {
         return this.supportedProcessNames().includes(item.name);
     }
     async capture(process) {
-        // Here we could try to connect to the extension first
-        // If extension fails, call captureRaw (which might use AppleScript)
-        // For now, we assume captureRaw handles the "Best Effort"
         return await this.captureRaw(process);
     }
     async restore(item) {
-        // Validate payload
         if (!item.payload || !item.payload.windows) {
             console.warn(`Invalid payload for browser restore: ${item.name}`);
             return;

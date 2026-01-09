@@ -25,7 +25,6 @@ class PluginRegistry {
         this.trackers.push(tracker);
     }
     getTrackerFor(process) {
-        // Find specific tracker, or return nothing (generic tracker logic might be separate or applied if undefined)
         return this.trackers.find(t => t.matches(process));
     }
     getAllTrackers() {

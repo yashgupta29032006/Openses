@@ -10,7 +10,6 @@ class MacOSPlatform {
         return 'macos';
     }
     async listRunningApps() {
-        // Use System Events to get processes that are not background only
         const script = `
         tell application "System Events"
             set procs to processes where background only is false
@@ -33,9 +32,6 @@ class MacOSPlatform {
         });
     }
     async activateApp(pid) {
-        // Can activate by PID via AppleScript or kill signal (not what we want)
-        // Generally activate by Name is easier in AS, but we have PID.
-        // We can use system events to set frontmost.
         const script = `
         tell application "System Events"
             set frontmost of (first process whose unix id is ${pid}) to true
@@ -55,11 +51,6 @@ class MacOSPlatform {
         });
     }
     getAppTracker(process) {
-        // Logic to choose tracker:
-        // 1. Check if PluginRegistry has a specific match (handled by caller typically, or we do it here?)
-        // The Interface says platform returns it? 
-        // Actually typically Registry holds trackers. Platform might have updated logic.
-        // Let's assume the caller uses Registry, but fallback to this platform's generic capability.
         return this.genericTracker;
     }
 }

@@ -14,7 +14,7 @@ export class SafariAdapter extends AbstractBrowserAdapter {
 
     async captureRaw(process: AppProcess): Promise<BrowserSessionState> {
         const appName = 'Safari';
-        // Safari script
+
         const script = `
         set output to ""
         tell application "Safari"
@@ -42,8 +42,7 @@ export class SafariAdapter extends AbstractBrowserAdapter {
     }
 
     private parseSafariOutput(raw: string): BrowserSessionState {
-        // Similar parsing to Chrome but Safari bounds etc might be slightly different?
-        // Actually we unified the output format in AS.
+
         const windows: BrowserWindow[] = [];
         const blocks = raw.split('***').filter(Boolean);
 
@@ -67,7 +66,7 @@ export class SafariAdapter extends AbstractBrowserAdapter {
                 if (url && url !== 'missing value') {
                     tabs.push({
                         url,
-                        scrollRatio: 0, // Safari scrolling hard to read reliably without enabled JS
+                        scrollRatio: 0,
                         isActive: isCurrent === 'true'
                     });
                     if (isCurrent === 'true') activeTabIndex = idx;

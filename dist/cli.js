@@ -11,9 +11,7 @@ const storage_1 = require("./core/storage");
 const chrome_1 = require("./adapters/browsers/chrome");
 const safari_1 = require("./adapters/browsers/safari");
 const os_1 = __importDefault(require("os"));
-// Initialize System
 const registry = registry_1.PluginRegistry.getInstance();
-// Platform Detection
 if (process.platform === 'darwin') {
     registry.setPlatform(new macos_1.MacOSPlatform());
 }
@@ -21,15 +19,8 @@ else {
     console.error('OS not supported yet:', process.platform);
     process.exit(1);
 }
-// Register Adapters
 registry.registerTracker(new chrome_1.ChromeAdapter());
 registry.registerTracker(new safari_1.SafariAdapter());
-// MacOSPlatform provides the generic tracker as fallback via getAppTracker() 
-// but we should probably force register it if we want it to be finding generic apps?
-// No, the logic in 'save' below will ask platform or registry.
-// Ideally, we register the Generic one last? 
-// The MacOSPlatform implementation wraps the generic tracker. 
-// Let's rely on the strategy defined below.
 const storage = new storage_1.StorageManager();
 const program = new commander_1.Command();
 program
@@ -53,7 +44,6 @@ program.command('save')
                 tracker = platform.getAppTracker(app);
             }
             if (tracker) {
-                // console.log(`Capturing ${app.name}...`);
                 try {
                     const payload = await tracker.capture(app);
                     // Only add if we captured something meaningful (e.g. windows exist)
@@ -105,12 +95,7 @@ program.command('restore')
             let tracker = registry.getAllTrackers().find(t => t.canRestore(item));
             // 2. Fallback to platform generic
             if (!tracker) {
-                // Create a dummy process object just to get the generic tracker?
-                // Or cast platform generic tracker.
-                // MacOSPlatform returns GenericAppleScriptTracker which returns true for canRestore.
-                // Ideally we should expose the generic tracker cleaner.
-                // Let's assume generic tracker is always available via platform logic.
-                tracker = platform.getAppTracker({ pid: 0, name: item.name }); // Dummy process
+                tracker = platform.getAppTracker({ pid: 0, name: item.name });
             }
             if (tracker) {
                 console.log(`Restoring ${item.name}...`);

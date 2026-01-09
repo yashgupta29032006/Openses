@@ -19,7 +19,6 @@ async function runAppleScript(script) {
                 resolve(stdout.trim());
             }
             else {
-                // If user canceled, just return empty
                 if (stderr.includes('User canceled')) {
                     resolve('');
                 }
@@ -36,8 +35,6 @@ async function runAppleScript(script) {
 async function runJxa(script) {
     return new Promise((resolve, reject) => {
         const child = (0, child_process_1.spawn)('osascript', ['-l', 'JavaScript', '-e', script]);
-        // ... similar to above but for JXA if needed
-        // For now we stick to standard AppleScript as it's often more stable for "System Events"
         let stdout = '';
         child.stdout.on('data', d => stdout += d.toString());
         child.on('close', (code) => {

@@ -30,7 +30,7 @@ export class PluginRegistry {
     }
 
     getTrackerFor(process: AppProcess): AppTracker | undefined {
-        // Find specific tracker, or return nothing (generic tracker logic might be separate or applied if undefined)
+
         return this.trackers.find(t => t.matches(process));
     }
 

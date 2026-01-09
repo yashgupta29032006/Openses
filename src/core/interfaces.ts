@@ -2,8 +2,8 @@
 export interface AppProcess {
     pid: number;
     name: string;
-    path?: string; // Executable path
-    bundleId?: string; // macOS bundle identifier
+    path?: string;
+    bundleId?: string;
     title?: string;
     isActive?: boolean;
 }
@@ -12,9 +12,9 @@ export type SessionItemType = 'app' | 'browser';
 
 export interface SessionItem {
     type: SessionItemType;
-    id: string; // bundleId or process name
-    name: string; // Human readable name
-    payload: any; // The state blob
+    id: string;
+    name: string;
+    payload: any;
 }
 
 export interface SessionData {

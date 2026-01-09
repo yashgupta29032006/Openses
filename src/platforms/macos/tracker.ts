@@ -7,7 +7,7 @@ export class AppleScriptAppTracker implements AppTracker {
     }
 
     matches(process: AppProcess): boolean {
-        // This is the fallback tracker, so it matches everything not handled by specific ones.
+
         return true;
     }
 
@@ -17,7 +17,7 @@ export class AppleScriptAppTracker implements AppTracker {
 
     async capture(process: AppProcess): Promise<any> {
         const appName = process.name;
-        // Basic window capture
+
         const script = `
         tell application "${appName}"
             set output to ""
@@ -28,7 +28,7 @@ export class AppleScriptAppTracker implements AppTracker {
                     set output to output & t & "|" & (b as string) & ";;"
                 end repeat
             on error
-                -- App might not be scriptable or have windows
+
             end try
             return output
         end tell
@@ -47,7 +47,7 @@ export class AppleScriptAppTracker implements AppTracker {
                     let bounds = { x: 0, y: 0, w: 0, h: 0 };
 
                     if (coords.length >= 4) {
-                        // AppleScript bounds are L, T, R, B
+
                         bounds = {
                             x: coords[0],
                             y: coords[1],
@@ -59,14 +59,13 @@ export class AppleScriptAppTracker implements AppTracker {
                 }).filter(Boolean);
             }
         } catch (e) {
-            // Ignore failure here, try document capture below
+
         }
 
-        // Try to capture open document/file path
+
         let openFile = undefined;
         try {
-            // Some apps expose 'document 1' -> 'file' -> 'posix path'
-            // Or 'file of document 1'
+
             const docScript = `tell application "${appName}" to get POSIX path of (file of document 1)`;
             const docPath = await runAppleScript(docScript);
             if (docPath && !docPath.includes('error') && docPath.trim() !== '') {
@@ -84,10 +83,10 @@ export class AppleScriptAppTracker implements AppTracker {
         const windows = item.payload.windows || [];
         const openFile = item.payload.openFile;
 
-        // Activate
+
         await runAppleScript(`tell application "${appName}" to activate`);
 
-        // If we saved an open file, try to open it
+
         if (openFile) {
             try {
                 await runAppleScript(`tell application "${appName}" to open (POSIX file "${openFile}")`);
@@ -96,7 +95,7 @@ export class AppleScriptAppTracker implements AppTracker {
             }
         }
 
-        // Restore Windows Bounds
+
         let i = 1;
         for (const win of windows) {
             const { x, y, w, h } = win.bounds;
@@ -108,7 +107,7 @@ export class AppleScriptAppTracker implements AppTracker {
                 await runAppleScript(`tell application "${appName}" to set bounds of window ${i} to {${x}, ${y}, ${R}, ${B}}`);
                 i++;
             } catch (e) {
-                // ignore
+
             }
         }
     }
