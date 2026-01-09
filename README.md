@@ -11,29 +11,69 @@ It allows you to save and restore your entire working context (Window positions,
 
 ## Installation
 
-```bash
-git clone <repo>
-cd YG
-npm install
-npm run build
-npm link
-```
+1.  **Clone the repository**:
+    ```bash
+    git clone <repo_url>
+    cd Openses
+    ```
+
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+
+3.  **Build the project**:
+    ```bash
+    npm run build
+    ```
+
+4.  **Link the CLI globally** (optional, for easy access):
+    ```bash
+    npm link
+    ```
+    *This allows you to run `yg` from any terminal window.*
 
 ## Usage
 
+If you linked the package globally:
+
 ### Save a Session
+Save your current open apps and windows:
 ```bash
-yg save work-morning
+yg save <session-name>
+# Example: yg save work-focus
 ```
 
 ### Restore a Session
+Restore a previously saved session:
 ```bash
-yg restore work-morning
+yg restore <session-name>
+# Example: yg restore work-focus
 ```
 
 ### List Sessions
+See all saved sessions:
 ```bash
 yg list
+```
+
+### Delete a Session
+Remove a saved session:
+```bash
+yg delete <session-name>
+```
+
+### Help
+View all available commands:
+```bash
+yg --help
+```
+
+### Running without linking
+If you didn't run `npm link`, you can use the CLI directly via node:
+```bash
+node dist/cli.js <command>
+# Example: node dist/cli.js save my-session
 ```
 
 ## Extending (Plugins)
