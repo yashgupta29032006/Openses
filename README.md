@@ -9,6 +9,11 @@ It allows you to save and restore your entire working context (Window positions,
 -   **Plugin Architecture**: Easily extensible via the `AppTracker` interface.
 -   **JSON Storage**: Sessions are saved as readable, normalized JSON files in `~/.yg/sessions`.
 
+## Prerequisites
+
+Before installing, ensure you have **Node.js** installed (which includes `npm`).
+-   [Download Node.js](https://nodejs.org/) (LTS version recommended)
+
 ## Installation
 
 1.  **Clone the repository**:
