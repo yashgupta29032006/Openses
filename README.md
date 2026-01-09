@@ -81,6 +81,20 @@ node dist/cli.js <command>
 # Example: node dist/cli.js save my-session
 ```
 
+## Standalone Usage
+
+You can download the standalone executable `yg-arm64` (located in the `build` folder).
+
+After downloading it, run:
+```bash
+sudo mv ~/Downloads/yg-arm64 /usr/local/bin/yg
+```
+
+Then you can simply run:
+```bash
+yg
+```
+
 ## Extending (Plugins)
 
 The project is built on a plugin system.
