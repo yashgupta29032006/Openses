@@ -46,3 +46,10 @@ export interface AppTracker {
     capture(process: AppProcess): Promise<any>;
     restore(item: SessionItem): Promise<void>;
 }
+
+export interface SessionSummary {
+    id: string; // filename without extension
+    created: number;
+    appCount: number;
+    confidence: 'Full' | 'Partial' | 'Layout-only';
+}

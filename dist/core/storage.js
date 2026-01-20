@@ -27,10 +27,41 @@ class StorageManager {
         }
         return await fs_extra_1.default.readJson(filePath);
     }
-    async listSessions() {
+    async listSessionSummaries() {
         await this.init();
         const files = await fs_extra_1.default.readdir(SESSION_DIR);
-        return files.filter(f => f.endsWith('.json')).map(f => f.replace('.json', ''));
+        const jsonFiles = files.filter(f => f.endsWith('.json'));
+        const summaries = [];
+        for (const file of jsonFiles) {
+            try {
+                const filePath = path_1.default.join(SESSION_DIR, file);
+                const data = await fs_extra_1.default.readJson(filePath);
+                const stats = await fs_extra_1.default.stat(filePath);
+                // Determine confidence
+                const total = data.items.length;
+                const highConf = data.items.filter(i => i.confidence === 'high' || i.trackerType === 'plugin').length;
+                const mediumConf = data.items.filter(i => i.confidence === 'medium' || i.trackerType === 'universal').length;
+                let confidence = 'Partial';
+                if (total > 0) {
+                    if (highConf / total > 0.8)
+                        confidence = 'Full';
+                    else if (mediumConf === total)
+                        confidence = 'Layout-only';
+                }
+                summaries.push({
+                    id: file.replace('.json', ''),
+                    created: data.meta?.created || stats.birthtimeMs || stats.mtimeMs,
+                    appCount: total,
+                    confidence
+                });
+            }
+            catch (e) {
+                // Skip corrupted files
+                console.warn(`Skipping corrupted session file: ${file}`);
+            }
+        }
+        // Sort by created desc (newest first)
+        return summaries.sort((a, b) => b.created - a.created);
     }
     async deleteSession(name) {
         const filePath = path_1.default.join(SESSION_DIR, `${name}.json`);

@@ -177,9 +177,28 @@ program.command('restore')
 program.command('list')
     .description('List sessions')
     .action(async () => {
-        const sessions = await storage.listSessions();
-        if (sessions.length === 0) console.log('No sessions found.');
-        else sessions.forEach(s => console.log(` - ${s}`));
+        const summaries = await storage.listSessionSummaries();
+
+        if (summaries.length === 0) {
+            console.log('No sessions found.');
+            return;
+        }
+
+        console.log('\nSessions:');
+        for (const s of summaries) {
+            const dateObj = new Date(s.created);
+            // YYYY-MM-DD
+            const dateStr = dateObj.toLocaleDateString('sv');
+            // HH:MM (24h)
+            const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
+            // Format: YYYY-MM-DD HH:MM  name (padded)  N apps  [Confidence]
+            const namePad = s.id.padEnd(25).slice(0, 25);
+            const countStr = `${s.appCount} apps`.padEnd(8);
+
+            console.log(`${dateStr} ${timeStr}  ${namePad}  ${countStr}   [${s.confidence}]`);
+        }
+        console.log('');
     });
 
 program.command('delete')
