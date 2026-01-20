@@ -8,6 +8,13 @@ async function runAppleScript(script) {
         const child = (0, child_process_1.spawn)('osascript', ['-e', script]);
         let stdout = '';
         let stderr = '';
+        let timedOut = false;
+        // 5 second timeout for any AppleScript
+        const timer = setTimeout(() => {
+            timedOut = true;
+            child.kill();
+            reject(new Error('AppleScript timed out'));
+        }, 5000);
         child.stdout.on('data', (data) => {
             stdout += data.toString();
         });
@@ -15,6 +22,9 @@ async function runAppleScript(script) {
             stderr += data.toString();
         });
         child.on('close', (code) => {
+            clearTimeout(timer);
+            if (timedOut)
+                return;
             if (code === 0) {
                 resolve(stdout.trim());
             }
@@ -28,7 +38,9 @@ async function runAppleScript(script) {
             }
         });
         child.on('error', (err) => {
-            reject(err);
+            clearTimeout(timer);
+            if (!timedOut)
+                reject(err);
         });
     });
 }

@@ -6,6 +6,14 @@ export async function runAppleScript(script: string): Promise<string> {
 
         let stdout = '';
         let stderr = '';
+        let timedOut = false;
+
+        // 5 second timeout for any AppleScript
+        const timer = setTimeout(() => {
+            timedOut = true;
+            child.kill();
+            reject(new Error('AppleScript timed out'));
+        }, 5000);
 
         child.stdout.on('data', (data) => {
             stdout += data.toString();
@@ -16,10 +24,12 @@ export async function runAppleScript(script: string): Promise<string> {
         });
 
         child.on('close', (code) => {
+            clearTimeout(timer);
+            if (timedOut) return;
+
             if (code === 0) {
                 resolve(stdout.trim());
             } else {
-
                 if (stderr.includes('User canceled')) {
                     resolve('');
                 } else {
@@ -29,7 +39,8 @@ export async function runAppleScript(script: string): Promise<string> {
         });
 
         child.on('error', (err) => {
-            reject(err);
+            clearTimeout(timer);
+            if (!timedOut) reject(err);
         });
     });
 }

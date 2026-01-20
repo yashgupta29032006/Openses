@@ -1,32 +1,43 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AppleScriptAppTracker = void 0;
+exports.UniversalAppTracker = void 0;
 const applescript_1 = require("./applescript");
-class AppleScriptAppTracker {
+const child_process_1 = require("child_process");
+class UniversalAppTracker {
     getName() {
-        return 'GenericAppleScriptTracker';
+        return 'UniversalFallbackTracker';
     }
     matches(process) {
+        // This is the fallback, so it matches everything not handled by plugins
         return true;
     }
     canRestore(item) {
-        return true;
+        return item.trackerType === 'universal';
     }
     async capture(process) {
         const appName = process.name;
+        // Universal Capture via System Events (Accessibility API)
+        // This works on almost ALL apps (Electron, SwiftUI, Catalyst, etc.)
+        // unlike 'tell application "App"' which requires a dictionary.
         const script = `
-        tell application "${appName}"
-            set output to ""
-            try
+        tell application "System Events"
+            if not (exists process "${appName}") then return ""
+            
+            set winList to ""
+            tell process "${appName}"
                 repeat with w in windows
-                    set b to bounds of w
-                    set t to name of w
-                    set output to output & t & "|" & (b as string) & ";;"
+                    try
+                        set t to name of w
+                        set p to position of w
+                        set s to size of w
+                        -- Format: Title|X,Y|W,H;;
+                        set winList to winList & t & "|" & (item 1 of p) & "," & (item 2 of p) & "|" & (item 1 of s) & "," & (item 2 of s) & ";;"
+                    on error
+                        -- Skip windows efficiently
+                    end try
                 end repeat
-            on error
-
-            end try
-            return output
+            end tell
+            return winList
         end tell
         `;
         let windows = [];
@@ -34,65 +45,78 @@ class AppleScriptAppTracker {
             const raw = await (0, applescript_1.runAppleScript)(script);
             if (raw) {
                 windows = raw.split(';;').filter(Boolean).map(line => {
-                    const parts = line.split('|');
+                    const parts = line.split('|'); // Title | X,Y | W,H
+                    if (parts.length < 3)
+                        return null;
                     const title = parts[0];
-                    const boundsStr = parts[1] || "";
-                    const coords = boundsStr.replace(/\s/g, '').split(',').map(Number);
-                    let bounds = { x: 0, y: 0, w: 0, h: 0 };
-                    if (coords.length >= 4) {
-                        bounds = {
-                            x: coords[0],
-                            y: coords[1],
-                            w: coords[2] - coords[0],
-                            h: coords[3] - coords[1]
-                        };
-                    }
-                    return { title, bounds };
-                }).filter(Boolean);
+                    const [x, y] = parts[1].split(',').map(Number);
+                    const [w, h] = parts[2].split(',').map(Number);
+                    return {
+                        title,
+                        bounds: { x, y, w, h }
+                    };
+                }).filter((w) => !!w);
             }
         }
         catch (e) {
+            console.error(`Universal capture failed for ${appName}:`, e);
         }
-        let openFile = undefined;
-        try {
-            const docScript = `tell application "${appName}" to get POSIX path of (file of document 1)`;
-            const docPath = await (0, applescript_1.runAppleScript)(docScript);
-            if (docPath && !docPath.includes('error') && docPath.trim() !== '') {
-                openFile = docPath.trim();
-            }
-        }
-        catch { }
-        // If we found nothing, but process is running, return empty object so it IS tracked
-        // This ensures "Notion" is at least opened next time even if we can't get windows
-        return { windows, openFile };
+        // Return payload with low/medium confidence
+        return {
+            windows,
+            bundleId: process.bundleId,
+            executablePath: process.path
+        };
     }
     async restore(item) {
         const appName = item.name;
+        const bundleId = item.payload.bundleId;
         const windows = item.payload.windows || [];
-        const openFile = item.payload.openFile;
-        await (0, applescript_1.runAppleScript)(`tell application "${appName}" to activate`);
-        if (openFile) {
-            try {
-                await (0, applescript_1.runAppleScript)(`tell application "${appName}" to open (POSIX file "${openFile}")`);
-            }
-            catch (e) {
-                console.warn(`Failed to open file ${openFile} in ${appName}`);
-            }
+        // 1. Launch the app
+        console.log(`[Universal] Launching ${appName} (${bundleId || 'No ID'})...`);
+        if (bundleId) {
+            await this.openBundle(bundleId);
         }
+        else {
+            // Fallback to name-based launch
+            await (0, applescript_1.runAppleScript)(`tell application "${appName}" to activate`);
+        }
+        // 2. Wait for app to be ready (naive wait, can be improved)
+        await new Promise(r => setTimeout(r, 2000));
+        // 3. Restore Windows via System Events
         let i = 1;
         for (const win of windows) {
             const { x, y, w, h } = win.bounds;
-            if (w === 0 && h === 0)
+            // Sanity check for valid bounds
+            if (w < 10 || h < 10)
                 continue;
-            const R = x + w;
-            const B = y + h;
+            const script = `
+            tell application "System Events"
+                tell process "${appName}"
+                    if exists window ${i} then
+                        set position of window ${i} to {${x}, ${y}}
+                        set size of window ${i} to {${w}, ${h}}
+                    end if
+                end tell
+            end tell
+            `;
             try {
-                await (0, applescript_1.runAppleScript)(`tell application "${appName}" to set bounds of window ${i} to {${x}, ${y}, ${R}, ${B}}`);
+                await (0, applescript_1.runAppleScript)(script);
                 i++;
             }
             catch (e) {
+                // Ignore errors (window might not exist yet)
             }
         }
     }
+    async openBundle(bundleId) {
+        return new Promise((resolve) => {
+            // open -b com.package.name
+            const child = (0, child_process_1.spawn)('open', ['-b', bundleId]);
+            child.on('close', () => resolve());
+            // Also detach so we don't hold it
+            child.unref();
+        });
+    }
 }
-exports.AppleScriptAppTracker = AppleScriptAppTracker;
+exports.UniversalAppTracker = UniversalAppTracker;

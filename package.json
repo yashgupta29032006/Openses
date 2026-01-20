@@ -6,8 +6,13 @@
   "bin": {
     "yg": "./dist/cli.js"
   },
+  "files": [
+    "dist"
+  ],
+  "preferGlobal": true,
   "scripts": {
     "build": "tsc",
+    "prepack": "npm run build",
     "start": "node dist/cli.js",
     "test": "ts-node test.ts",
     "seed": "ts-node seed.ts",

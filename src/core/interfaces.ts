@@ -15,6 +15,9 @@ export interface SessionItem {
     id: string;
     name: string;
     payload: any;
+    confidence?: 'high' | 'medium' | 'low';
+    trackerType?: 'plugin' | 'universal';
+    metadata?: any;
 }
 
 export interface SessionData {
@@ -33,6 +36,7 @@ export interface PlatformAdapter {
     activateApp(pid: number): Promise<void>;
     openApp(path: string): Promise<void>;
     getAppTracker(process: AppProcess): AppTracker;
+    getProcessResources?(pid: number): Promise<{ cpu: number; mem: number }>;
 }
 
 export interface AppTracker {
