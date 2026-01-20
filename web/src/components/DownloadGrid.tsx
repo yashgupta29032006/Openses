@@ -46,7 +46,7 @@ export default function DownloadGrid() {
                                     whileTap={{ scale: 0.98 }}
                                     className="relative inline-flex items-center justify-center px-10 py-4 bg-white text-black font-medium text-lg rounded-full overflow-hidden"
                                 >
-                                    <span className="relative z-10">Download yg-arm64</span>
+                                    <span className="relative z-10">Download Openses</span>
                                     <div className="absolute inset-0 bg-white/50 opacity-0 hover:opacity-100 transition-opacity duration-300 blur-xl" />
                                 </motion.div>
                             </Link>

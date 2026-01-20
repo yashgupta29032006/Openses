@@ -55,7 +55,7 @@ export default function Hero() {
                         className="group relative inline-flex items-center justify-center px-8 py-3 overflow-hidden font-mono font-medium tracking-tighter text-white transition duration-300 ease-out border border-white/20 rounded-full hover:bg-white hover:text-black hover:border-transparent active:scale-95"
                     >
                         <span className="absolute inset-0 w-full h-full bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                        <span className="relative">Download yg-arm64</span>
+                        <span className="relative">Download Openses</span>
                     </Link>
                 </motion.div>
             </div>
