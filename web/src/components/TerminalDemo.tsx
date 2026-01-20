@@ -1,8 +1,11 @@
+"use client";
+
+import FadeIn from "./FadeIn";
 
 export default function TerminalDemo() {
     return (
         <section className="py-32 px-4 flex justify-center">
-            <div className="w-full max-w-2xl bg-[#111] rounded-xl border border-white/10 shadow-2xl overflow-hidden font-mono text-sm md:text-base">
+            <FadeIn className="w-full max-w-2xl bg-[#111] rounded-xl border border-white/10 shadow-2xl overflow-hidden font-mono text-sm md:text-base">
                 {/* Window controls */}
                 <div className="bg-white/5 px-4 py-3 flex items-center gap-2 border-b border-white/5">
                     <div className="w-3 h-3 rounded-full bg-[#FF5F56] opacity-80" />
@@ -38,13 +41,13 @@ export default function TerminalDemo() {
                         <p>Opening files...</p>
                         <p className="text-emerald-400">✓ Welcome back.</p>
                     </div>
-                    <div className="flex animate-pulse">
+                    <div className="flex">
                         <span className="text-emerald-400 mr-3">➜</span>
                         <span className="text-blue-400 mr-3">~</span>
                         <span className="w-2.5 h-5 bg-white/50 block"></span>
                     </div>
                 </div>
-            </div>
+            </FadeIn>
         </section>
     );
 }
