@@ -171,7 +171,9 @@ program.command('restore')
             console.log('Restore complete.');
         } catch (e) {
             console.error('Restore failed:', e);
+            process.exit(1);
         }
+        process.exit(0);
     });
 
 program.command('list')

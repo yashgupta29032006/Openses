@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Openses</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="title-bar">
+            <div class="drag-region">Openses</div>
+            <div class="window-controls-spacer"></div>
+            <div class="actions">
+                <button id="save-btn" class="action-btn">
+                    <span class="icon">+</span> Save Session
+                </button>
+                <button id="refresh-btn" class="icon-btn" title="Refresh">
+                    ↻
+                </button>
+            </div>
+        </header>
+
+        <main id="session-grid" class="session-grid">
+            <!-- Cards will be injected here -->
+            <div class="empty-state">Loading...</div>
+        </main>
+
+        <!-- Save Modal -->
+        <div id="save-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Save New Session</h3>
+                <input type="text" id="session-name-input" placeholder="Session Name (e.g. Work)" autofocus>
+                <div class="modal-actions">
+                    <button id="cancel-save-btn">Cancel</button>
+                    <button id="confirm-save-btn" class="primary">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="toast" class="toast hidden"></div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <div id="loading-text">Working...</div>
+        </div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html>
