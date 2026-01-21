@@ -6,12 +6,11 @@ const saveModal = document.getElementById('save-modal');
 const inputName = document.getElementById('session-name-input');
 const confirmSaveBtn = document.getElementById('confirm-save-btn');
 const cancelSaveBtn = document.getElementById('cancel-save-btn');
-const loadingOverlay = document.getElementById('loading-overlay');
-const loadingText = document.getElementById('loading-text');
 const toastEl = document.getElementById('toast');
 
 // State
 let sessions = [];
+let restoringSession = null; // Track which session is restoring
 
 // Init
 init();
@@ -32,42 +31,55 @@ async function loadSessions() {
 
 function render() {
     grid.innerHTML = '';
-
+    
     if (sessions.length === 0) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1; text-align: center; color: var(--secondary-text); margin-top: 40px;">No saved sessions found.<br>Create one to get started.</div>';
+        grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1; text-align: center; color: var(--secondary-text); margin-top: 40px; font-size: 13px;">No saved sessions.<br>Create one to start.</div>';
         return;
     }
 
     sessions.forEach(s => {
         const card = document.createElement('div');
         card.className = 'session-card';
-
+        
         // Icon based on confidence or name
-        let icon = '📂';
+        let icon = '📂'; 
         if (s.id.toLowerCase().includes('code')) icon = '💻';
         if (s.id.toLowerCase().includes('work')) icon = '💼';
         if (s.id.toLowerCase().includes('music')) icon = '🎵';
 
         const date = new Date(s.created);
-        const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+        const isRestoring = restoringSession === s.id;
+        const btnText = isRestoring ? 'Restoring...' : 'Restore';
+        const btnClass = isRestoring ? 'restore-btn loading' : 'restore-btn';
+        const spinnerHtml = isRestoring ? '<span class="spinner-small"></span>' : '';
 
         card.innerHTML = `
-            <div class="card-header">
+            <button class="delete-btn" title="Delete">×</button>
+            <div class="card-top">
                 <div class="session-icon">${icon}</div>
-                <button class="delete-btn" title="Delete Session">×</button>
-            </div>
-            <div class="session-info">
-                <h3>${escapeHtml(s.id)}</h3>
-                <div class="session-meta">
-                    ${s.appCount} items • ${dateStr}
+                <div class="session-info">
+                    <h3>${escapeHtml(s.id)}</h3>
+                    <div class="session-meta">
+                        ${s.appCount} apps • ${dateStr}
+                    </div>
                 </div>
+            </div>
+            <div class="card-actions">
+                <button class="${btnClass}" data-name="${escapeHtml(s.id)}">
+                    ${spinnerHtml}${btnText}
+                </button>
             </div>
         `;
 
-        // Click to restore
-        card.addEventListener('click', (e) => {
-            if (e.target.closest('.delete-btn')) return;
-            handleRestore(s.id);
+        // Explicit Restore Button Click
+        const restoreBtn = card.querySelector('.restore-btn');
+        restoreBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Safe click
+            if (!restoringSession) {
+                handleRestore(s.id);
+            }
         });
 
         // Delete action
@@ -94,7 +106,7 @@ function setupListeners() {
 
     // Save Modal
     cancelSaveBtn.addEventListener('click', () => saveModal.classList.add('hidden'));
-
+    
     confirmSaveBtn.addEventListener('click', () => {
         const name = inputName.value.trim();
         if (name) {
@@ -110,33 +122,33 @@ function setupListeners() {
 }
 
 async function handleRestore(name) {
-    showLoading(true, `Restoring "${name}"...`);
+    restoringSession = name;
+    render(); // Update UI to show spinner
+    
     try {
         const res = await window.api.restoreSession(name);
         if (res.success) {
-            showToast(`Session "${name}" restored!`);
+            showToast(`Session restored`);
         } else {
             showToast('Restore returned unexpected status', true);
         }
     } catch (e) {
         showToast(`Error: ${e.message}`, true);
     } finally {
-        showLoading(false);
+        restoringSession = null;
+        render(); // Reset UI
     }
 }
 
 async function handleSave(name) {
-    showLoading(true, `Saving "${name}"...`);
     try {
         const res = await window.api.saveSession(name);
         if (res.success) {
-            showToast(`Session "${name}" saved!`);
+            showToast(`Saved "${name}"`);
             await loadSessions();
         }
     } catch (e) {
         showToast(`Save failed: ${e.message}`, true);
-    } finally {
-        showLoading(false);
     }
 }
 
@@ -144,33 +156,23 @@ async function handleDelete(name) {
     try {
         const res = await window.api.deleteSession(name);
         if (res.success) {
-            showToast(`Deleted "${name}"`);
-            await loadSessions();
+            await loadSessions(); // fast update, no toast needed for simple delete
         }
     } catch (e) {
         showToast(`Delete failed: ${e.message}`, true);
     }
 }
 
-function showLoading(visible, text = '') {
-    if (visible) {
-        loadingText.textContent = text;
-        loadingOverlay.classList.remove('hidden');
-    } else {
-        loadingOverlay.classList.add('hidden');
-    }
-}
-
 function showToast(msg, isError = false) {
-    toastEl.textContent = msg;
-    toastEl.style.backgroundColor = isError ? 'rgba(255, 59, 48, 0.9)' : 'rgba(50, 50, 50, 0.9)';
+    toastEl.innerHTML = msg; // innerHTML to support simple formatting if need be
+    toastEl.style.color = isError ? '#ff453a' : 'white';
     toastEl.classList.remove('hidden');
-
+    
     // Reset animation
     toastEl.style.animation = 'none';
     toastEl.offsetHeight; // trigger reflow
     toastEl.style.animation = 'fadein 0.3s, fadeout 0.3s 2.7s';
-
+    
     setTimeout(() => {
         toastEl.classList.add('hidden');
     }, 3000);

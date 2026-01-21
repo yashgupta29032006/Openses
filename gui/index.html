@@ -9,8 +9,10 @@
 <body>
     <div class="app-container">
         <header class="title-bar">
-            <div class="drag-region">Openses</div>
-            <div class="window-controls-spacer"></div>
+            <div class="drag-region">
+                <span class="app-title">Openses</span>
+                <span class="app-tag">YG</span>
+            </div>
             <div class="actions">
                 <button id="save-btn" class="action-btn">
                     <span class="icon">+</span> Save Session
@@ -29,8 +31,8 @@
         <!-- Save Modal -->
         <div id="save-modal" class="modal hidden">
             <div class="modal-content">
-                <h3>Save New Session</h3>
-                <input type="text" id="session-name-input" placeholder="Session Name (e.g. Work)" autofocus>
+                <h3>Save Session</h3>
+                <input type="text" id="session-name-input" placeholder="Name" autofocus>
                 <div class="modal-actions">
                     <button id="cancel-save-btn">Cancel</button>
                     <button id="confirm-save-btn" class="primary">Save</button>
@@ -40,12 +42,6 @@
 
         <!-- Notification Toast -->
         <div id="toast" class="toast hidden"></div>
-
-        <!-- Loading Overlay -->
-        <div id="loading-overlay" class="loading-overlay hidden">
-            <div class="spinner"></div>
-            <div id="loading-text">Working...</div>
-        </div>
     </div>
     <script src="renderer.js"></script>
 </body>
