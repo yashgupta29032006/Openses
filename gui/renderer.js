@@ -118,56 +118,52 @@ function handleDragStart(e) {
     dragStartX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
     dragStartY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
 
-    longPressTimer = setTimeout(() => {
-        startDragging(card, e);
-    }, 500); // 500ms Long Press
+    // We don't start dragging immediately. We wait for movement > threshold.
 
-    // Listener to cancel if moved too much before long press triggers
-    const cancelEvents = ['mouseup', 'mouseleave', 'touchend', 'touchcancel'];
     const moveEvent = e.type.includes('touch') ? 'touchmove' : 'mousemove';
+    const endEvent = e.type.includes('touch') ? 'touchend' : 'mouseup';
 
-    const cancelHandler = () => {
-        clearTimeout(longPressTimer);
-        cleanup();
-    };
-
-    const moveHandler = (moveE) => {
+    const onMove = (moveE) => {
         const cx = moveE.type.includes('touch') ? moveE.touches[0].clientX : moveE.clientX;
         const cy = moveE.type.includes('touch') ? moveE.touches[0].clientY : moveE.clientY;
-        if (Math.hypot(cx - dragStartX, cy - dragStartY) > 10) {
-            clearTimeout(longPressTimer); // Cancel if moved > 10px
-            cleanup();
+
+        const dist = Math.hypot(cx - dragStartX, cy - dragStartY);
+
+        if (!isDragging && dist > 5) {
+            // Threshold reached, start dragging
+            startDragging(card, e, cx, cy); // Pass current coords to sync
         }
     };
 
-    const cleanup = () => {
-        cancelEvents.forEach(ev => card.removeEventListener(ev, cancelHandler));
-        document.removeEventListener(moveEvent, moveHandler);
+    const onEnd = () => {
+        document.removeEventListener(moveEvent, onMove);
+        document.removeEventListener(endEvent, onEnd);
     };
 
-    cancelEvents.forEach(ev => card.addEventListener(ev, cancelHandler, { once: true }));
-    document.addEventListener(moveEvent, moveHandler);
+    document.addEventListener(moveEvent, onMove, { passive: false });
+    document.addEventListener(endEvent, onEnd, { once: true });
 }
 
-function startDragging(card, e) {
+function startDragging(card, startEvent, startX, startY) {
+    if (isDragging) return;
     isDragging = true;
     draggedCard = card;
     initialIndex = [...grid.children].indexOf(card);
 
-    // Haptic feedback if available (not standard in Electron/web but good to have)
+    // Haptic feedback
     if (navigator.vibrate) navigator.vibrate(50);
 
     card.classList.add('is-dragging');
 
-    // Create placeholder
-    // We actually keep the card in dom but move it visually? 
-    // Easier: set fixed position for dragged card and put a placeholder in its spot.
-    // Simpler approach for grid: Just use transform for dragged, and swap DOM nodes for others.
-
-    // Set initial offsets
+    // Set initial offsets based on where the drag STARTED (not current mouse, to avoid jumps? 
+    // actually we need offset from card top-left)
     const rect = card.getBoundingClientRect();
-    const offsetX = (e.type.includes('touch') ? e.touches[0].clientX : e.clientX) - rect.left;
-    const offsetY = (e.type.includes('touch') ? e.touches[0].clientY : e.clientY) - rect.top;
+
+    // Note: Use startEvent coordinates for offset calculation to keep it stuck to mouse relative position
+    // Or better, use proper current mouse position.
+    // The startX/Y passed are the CURRENT mouse positions when threshold triggered.
+    const offsetX = startX - rect.left;
+    const offsetY = startY - rect.top;
 
     // Fix width/height
     card.style.width = rect.width + 'px';
@@ -177,18 +173,17 @@ function startDragging(card, e) {
     card.style.top = rect.top + 'px';
     card.style.zIndex = 1000;
 
-    // Create placeholder in flow
+    // Create placeholder
     placeholder = document.createElement('div');
     placeholder.className = 'session-card';
     placeholder.style.opacity = '0';
-    placeholder.style.border = '1px dashed var(--accent)';
+    placeholder.style.border = '1px dashed var(--accent)'; // Optional visual
     grid.insertBefore(placeholder, grid.children[initialIndex]);
 
-    // specific drag move listener
-    const moveEvent = e.type.includes('touch') ? 'touchmove' : 'mousemove';
-    const endEvent = e.type.includes('touch') ? 'touchend' : 'mouseup';
+    const moveEvent = startEvent.type.includes('touch') ? 'touchmove' : 'mousemove';
+    const endEvent = startEvent.type.includes('touch') ? 'touchend' : 'mouseup';
 
-    const onMove = (moveE) => {
+    const onDragMove = (moveE) => {
         moveE.preventDefault();
         const clientX = moveE.type.includes('touch') ? moveE.touches[0].clientX : moveE.clientX;
         const clientY = moveE.type.includes('touch') ? moveE.touches[0].clientY : moveE.clientY;
@@ -197,6 +192,8 @@ function startDragging(card, e) {
         card.style.top = (clientY - offsetY) + 'px';
 
         // Hit test
+        // We hide the dragged card so we can see what's under it? 
+        // pointer-events: none in CSS handles this.
         const elements = document.elementsFromPoint(clientX, clientY);
         const targetCard = elements.find(el => el.classList.contains('session-card') && el !== card && el !== placeholder);
 
@@ -215,9 +212,9 @@ function startDragging(card, e) {
         }
     };
 
-    const onEnd = async () => {
-        document.removeEventListener(moveEvent, onMove);
-        document.removeEventListener(endEvent, onEnd);
+    const onDragEnd = async () => {
+        document.removeEventListener(moveEvent, onDragMove);
+        document.removeEventListener(endEvent, onDragEnd);
 
         isDragging = false;
 
@@ -243,15 +240,12 @@ function startDragging(card, e) {
         // Save order
         await window.api.saveSessionOrder(newOrderIds);
 
-        // Reload to sync state (optional, or just update local sessions)
-        // Updating local sessions is smoother
-        // But we need to make sure we don't reload and flicker
-        // Let's just update local matches
+        // Update local state
         sessions.sort((a, b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
     };
 
-    document.addEventListener(moveEvent, onMove, { passive: false });
-    document.addEventListener(endEvent, onEnd);
+    document.addEventListener(moveEvent, onDragMove, { passive: false });
+    document.addEventListener(endEvent, onDragEnd);
 }
 
 function setupListeners() {
