@@ -177,6 +177,27 @@ button.primary:hover {
     border-color: var(--card-hover-border);
 }
 
+.session-card.is-dragging {
+    opacity: 1;
+    /* Keep it visible */
+    background: var(--card-hover-bg);
+    border-color: var(--accent);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    cursor: grabbing;
+    transform: scale(1.02);
+    /* Subtle scale */
+    pointer-events: none;
+    /* Crucial for document.elementsFromPoint to see what's below */
+}
+
+/* When shuffling, we might want a transition on transform */
+.session-card {
+    /* ... existing props ... */
+    transition: background 0.15s, border-color 0.15s, transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+
 .card-top {
     display: flex;
     flex-direction: column;

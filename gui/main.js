@@ -63,6 +63,18 @@ ipcMain.handle('delete-session', async (event, name) => {
     return runCli('delete', name);
 });
 
+ipcMain.handle('save-session-order', async (event, order) => {
+    if (!StorageManager) return { success: false, error: 'StorageManager not loaded' };
+    try {
+        const storage = new StorageManager();
+        await storage.saveSessionOrder(order);
+        return { success: true };
+    } catch (error) {
+        console.error("Error saving session order:", error);
+        return { success: false, error: error.message };
+    }
+});
+
 function runCli(command, arg) {
     return new Promise((resolve, reject) => {
         const cliPath = path.resolve(__dirname, '../dist/cli.js');
