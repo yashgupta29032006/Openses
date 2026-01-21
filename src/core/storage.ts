@@ -56,7 +56,8 @@ export class StorageManager {
                     id: file.replace('.json', ''),
                     created: data.meta?.created || stats.birthtimeMs || stats.mtimeMs,
                     appCount: total,
-                    confidence
+                    confidence,
+                    previewItems: data.items.map(i => ({ name: i.name || i.id, type: i.type }))
                 });
             } catch (e) {
                 // Skip corrupted files

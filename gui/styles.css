@@ -230,6 +230,71 @@ button.primary:hover {
     margin-top: auto;
 }
 
+
+/* Expanded State */
+.session-card.expanded {
+    z-index: 100;
+    background: rgba(40, 40, 40, 1);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    height: auto;
+    /* Allow growth */
+    grid-row: span 2;
+    /* Take up more space in grid if possible, or just overlap */
+}
+
+.preview-list {
+    display: none;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 12px;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.session-card.expanded .preview-list {
+    display: block;
+}
+
+.preview-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.preview-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 13px;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.app-icon {
+    font-size: 14px;
+    opacity: 0.6;
+}
+
+.app-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .restore-btn {
     width: 100%;
     padding: 6px 0;

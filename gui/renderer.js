@@ -66,6 +66,20 @@ function render() {
         const btnClass = isRestoring ? 'restore-btn loading' : 'restore-btn';
         const spinnerHtml = isRestoring ? '<span class="spinner-small"></span>' : '';
 
+        // Preview List (Hidden by default)
+        const previewHtml = `
+            <div class="preview-list">
+                <ul>
+                    ${(s.previewItems || []).map(p => `
+                        <li>
+                            <span class="app-icon">${p.type === 'browser' ? '🌐' : '🖥️'}</span>
+                            <span class="app-name">${escapeHtml(p.name)}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+        `;
+
         card.innerHTML = `
             <button class="delete-btn" title="Delete">×</button>
             <div class="card-top">
@@ -77,6 +91,7 @@ function render() {
                     </div>
                 </div>
             </div>
+            ${previewHtml}
             <div class="card-actions">
                 <button class="${btnClass}" data-name="${escapeHtml(s.id)}">
                     ${spinnerHtml}${btnText}
@@ -99,6 +114,21 @@ function render() {
             e.stopPropagation();
             if (!isDragging && confirm(`Delete session "${s.id}"?`)) {
                 handleDelete(s.id);
+            }
+        });
+
+        // Click to expand
+        card.addEventListener('click', (e) => {
+            if (isDragging || e.target.closest('button')) return;
+
+            // Toggle
+            const wasExpanded = card.classList.contains('expanded');
+
+            // Collapse all others
+            document.querySelectorAll('.session-card.expanded').forEach(c => c.classList.remove('expanded'));
+
+            if (!wasExpanded) {
+                card.classList.add('expanded');
             }
         });
 
@@ -271,6 +301,13 @@ function setupListeners() {
     inputName.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') confirmSaveBtn.click();
         if (e.key === 'Escape') cancelSaveBtn.click();
+    });
+
+    // Global click to collapse
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.session-card')) {
+            document.querySelectorAll('.session-card.expanded').forEach(c => c.classList.remove('expanded'));
+        }
     });
 }
 

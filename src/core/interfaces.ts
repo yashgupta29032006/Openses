@@ -52,4 +52,5 @@ export interface SessionSummary {
     created: number;
     appCount: number;
     confidence: 'Full' | 'Partial' | 'Layout-only';
+    previewItems: { name: string; type: string }[];
 }
