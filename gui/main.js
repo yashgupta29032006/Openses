@@ -39,6 +39,51 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
 
+let overlayWindow = null;
+
+const createOverlayWindow = () => {
+    overlayWindow = new BrowserWindow({
+        width: 600,
+        height: 400,
+        frame: false,
+        transparent: true,
+        alwaysOnTop: true,
+        show: false, // Hidden by default
+        hasShadow: false, // We draw our own
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+        }
+    });
+
+    overlayWindow.loadFile('overlay.html');
+    overlayWindow.setIgnoreMouseEvents(true); // Click-through by default when hidden/transparent
+
+    // On focus/blur handling if needed
+};
+
+app.whenReady().then(() => {
+    createWindow();
+    createOverlayWindow(); // Init the overlay
+    app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+});
+
+ipcMain.handle('show-overlay', (event, content) => {
+    if (overlayWindow) {
+        overlayWindow.show();
+        overlayWindow.setIgnoreMouseEvents(false); // Make interactive
+        overlayWindow.webContents.send('set-content', content);
+    }
+});
+
+ipcMain.handle('hide-overlay', () => {
+    if (overlayWindow) {
+        overlayWindow.hide();
+        overlayWindow.setIgnoreMouseEvents(true);
+    }
+});
+
 // IPC Handlers
 ipcMain.handle('get-sessions', async () => {
     if (!StorageManager) return [];
